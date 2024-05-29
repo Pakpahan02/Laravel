@@ -1,4 +1,45 @@
-export default function TasksTable({ tasks }) {
+import TableHeading from "@/Components/TableHeading";
+import Pagination from "@/Components/Pagination";
+import SelectInput from "@/Components/SelectInput";
+import TextInput from "@/Components/TextInput";
+import { TASK_STATUS_CLASS_MAP, TASK_STATUS_TEXT_MAP } from "@/constants";
+import { Link, router } from "@inertiajs/react";
+
+export default function TasksTable({
+  tasks,
+  queryParams = null,
+  hideProjectColumn = false,
+}) {
+  queryParams = queryParams || {};
+  const searchFieldChanged = (name, value) => {
+    if (value) {
+      queryParams[name] = value;
+    } else {
+      delete queryParams[name];
+    }
+
+    router.get(route("task.index"), queryParams);
+  };
+
+  const onKeyPress = (name, e) => {
+    if (e.key !== "Enter") return;
+
+    searchFieldChanged(name, e.target.value);
+  };
+
+  const sortChanged = (name) => {
+    if (name === queryParams.sort_field) {
+      if (queryParams.sort_direction === "asc") {
+        queryParams.sort_direction = "desc";
+      } else {
+        queryParams.sort_direction = "asc";
+      }
+    } else {
+      queryParams.sort_field = name;
+      queryParams.sort_direction = "asc";
+    }
+    router.get(route("task.index"), queryParams);
+  };
   return (
     <>
       <div className="overflow-auto">
@@ -14,6 +55,9 @@ export default function TasksTable({ tasks }) {
                 ID
               </TableHeading>
               <th className="px-3 py-3">Image</th>
+              {!hideProjectColumn && (
+                <th className="px-3 py-3">Project Name</th>
+              )}
               <TableHeading
                 name="name"
                 sort_field={queryParams.sort_field}
@@ -22,6 +66,7 @@ export default function TasksTable({ tasks }) {
               >
                 Name
               </TableHeading>
+
               <TableHeading
                 name="status"
                 sort_field={queryParams.sort_field}
@@ -54,6 +99,7 @@ export default function TasksTable({ tasks }) {
             <tr className="text-nowrap">
               <th className="px-3 py-3"></th>
               <th className="px-3 py-3"></th>
+              {!hideProjectColumn && <th className="px-3 py-3"></th>}
               <th className="px-3 py-3">
                 <TextInput
                   className="w-full"
@@ -91,6 +137,9 @@ export default function TasksTable({ tasks }) {
                 <td className="px-3 py-2">
                   <img src={task.image_path} style={{ width: 60 }} />
                 </td>
+                {!hideProjectColumn && (
+                  <td className="px-3 py-2">{task.project.name}</td>
+                )}
                 <td className="px-3 py-2">{task.name}</td>
                 <td className="px-3 py-2">
                   <span
